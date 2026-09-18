@@ -26,4 +26,12 @@ class Invoice(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     due_date: Mapped[str] = mapped_column(String(10))
     status: Mapped[str] = mapped_column(String(20), default="Unpaid")
-    
+
+class Expense(Base):
+    __tablename__ = "expenses"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    category: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str] = mapped_column(String(250))
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    expense_date: Mapped[str] = mapped_column(String(10))
