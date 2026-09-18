@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoices - InvoiceFlow</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <header>
+        <h1>InvoiceFlow</h1>
+        <p>Small Business Management System</p>
+    </header>
+
+    <main class="customers-page">
+        <a class="back-link" href="/">← Back to Dashboard</a>
+
+        <div class="page-heading">
+            <h2>Invoices</h2>
+            <p>Create invoices and track whether they have been paid.</p>
+        </div>
+
+        <section class="customer-form-card">
+            <h3>Create a New Invoice</h3>
+
+            {% if customers %}
+                <form action="/invoices" method="post">
+                    <label for="customer_id">Customer</label>
+                    <select id="customer_id" name="customer_id" required>
+                        <option value="">Select a customer</option>
+
+                        {% for customer in customers %}
+                            <option value="{{ customer.id }}">
+                                {{ customer.name }} — {{ customer.company }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="description">Description</label>
+                    <input id="description" name="description" type="text" required>
+
+                    <label for="amount">Amount (TZS)</label>
+                    <input
+                        id="amount"
+                        name="amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        required
+                    >
+
+                    <label for="due_date">Due Date</label>
+                    <input id="due_date" name="due_date" type="date" required>
+
+                    <button type="submit">Create Invoice</button>
+                </form>
+            {% else %}
+                <p class="empty-message">
+                    Add a customer before creating an invoice.
+                </p>
+
+                <a class="manage-link" href="/customers">
+                    Add Your First Customer
+                </a>
+            {% endif %}
+        </section>
+
+        <section class="customer-list-card">
+            <h3>Invoice List</h3>
+
+            {% if invoices %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Invoice</th>
+                            <th>Customer</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for invoice, customer in invoices %}
+                            <tr>
+                                <td>{{ invoice.invoice_number }}</td>
+                                <td>{{ customer.name }}</td>
+                                <td>{{ invoice.description }}</td>
+                                <td>TZS {{ invoice.amount }}</td>
+                                <td>{{ invoice.due_date }}</td>
+                                <td>
+                                    <span class="status {{ invoice.status|lower }}">
+                                        {{ invoice.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if invoice.status == "Unpaid" %}
+                                        <form
+                                            class="status-form"
+                                            action="/invoices/{{ invoice.id }}/paid"
+                                            method="post"
+                                        >
+                                            <button type="submit">Mark Paid</button>
+                                        </form>
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="empty-message">
+                    No invoices have been created yet.
+                </p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

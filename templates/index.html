@@ -24,20 +24,21 @@
     <a class="manage-link" href="/customers">Manage Customers</a>
 </section>
 
-        <section>
-            <h3>Total Invoices</h3>
-            <p>0</p>
-        </section>
+       <section>
+    <h3>Total Invoices</h3>
+    <p>{{ invoice_count }}</p>
+    <a class="manage-link" href="/invoices">Manage Invoices</a>
+</section>
 
-        <section>
-            <h3>Paid</h3>
-            <p>TZS 0</p>
-        </section>
+<section>
+    <h3>Paid</h3>
+    <p>TZS {{ paid_total }}</p>
+</section>
 
-        <section>
-            <h3>Outstanding</h3>
-            <p>TZS 0</p>
-        </section>
+<section>
+    <h3>Outstanding</h3>
+    <p>TZS {{ outstanding_total }}</p>
+</section>
     </main>
 </body>
 </html>

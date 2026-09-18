@@ -1,11 +1,13 @@
+from decimal import Decimal
+
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from database import Base, SessionLocal, engine
-from models import Customer
+from models import Customer, Invoice
 
 
 app = FastAPI()
@@ -21,11 +23,37 @@ Base.metadata.create_all(bind=engine)
 def home(request: Request):
     with SessionLocal() as database:
         customer_count = database.query(Customer).count()
+        invoices = database.scalars(select(Invoice)).all()
+
+        invoice_count = len(invoices)
+
+        paid_total = sum(
+            (
+                invoice.amount
+                for invoice in invoices
+                if invoice.status == "Paid"
+            ),
+            Decimal("0")
+        )
+
+        outstanding_total = sum(
+            (
+                invoice.amount
+                for invoice in invoices
+                if invoice.status == "Unpaid"
+            ),
+            Decimal("0")
+        )
 
     return templates.TemplateResponse(
         request=request,
         name="index.html",
-        context={"customer_count": customer_count}
+        context={
+            "customer_count": customer_count,
+            "invoice_count": invoice_count,
+            "paid_total": paid_total,
+            "outstanding_total": outstanding_total
+        }
     )
 
 
@@ -62,3 +90,67 @@ def add_customer(
         database.commit()
 
     return RedirectResponse(url="/customers", status_code=303)
+
+
+@app.get("/invoices", response_class=HTMLResponse)
+def invoices_page(request: Request):
+    with SessionLocal() as database:
+        customers = database.scalars(
+            select(Customer).order_by(Customer.name)
+        ).all()
+
+        invoices = database.execute(
+            select(Invoice, Customer)
+            .join(Customer, Invoice.customer_id == Customer.id)
+            .order_by(Invoice.id.desc())
+        ).all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="invoices.html",
+        context={
+            "customers": customers,
+            "invoices": invoices
+        }
+    )
+
+
+@app.post("/invoices")
+def add_invoice(
+    customer_id: int = Form(...),
+    description: str = Form(...),
+    amount: Decimal = Form(...),
+    due_date: str = Form(...)
+):
+    with SessionLocal() as database:
+        latest_id = database.scalar(
+            select(func.max(Invoice.id))
+        ) or 0
+
+        invoice_number = f"INV-{latest_id + 1:04d}"
+
+        invoice = Invoice(
+            invoice_number=invoice_number,
+            customer_id=customer_id,
+            description=description,
+            amount=amount,
+            due_date=due_date,
+            status="Unpaid"
+        )
+
+        database.add(invoice)
+        database.commit()
+
+    return RedirectResponse(url="/invoices", status_code=303)
+
+
+@app.post("/invoices/{invoice_id}/paid")
+def mark_invoice_paid(invoice_id: int):
+    with SessionLocal() as database:
+        invoice = database.get(Invoice, invoice_id)
+
+        if invoice is not None:
+            invoice.status = "Paid"
+            database.commit()
+
+    return RedirectResponse(url="/invoices", status_code=303)
