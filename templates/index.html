@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InvoiceFlow Dashboard</title>
     <link rel="stylesheet" href="/static/styles.css">
-    
+
 </head>
 
 <body>
@@ -18,10 +18,11 @@
         <h2>Dashboard</h2>
         <p>Welcome! Here is an overview of your business.</p>
 
-        <section>
-            <h3>Customers</h3>
-            <p>0</p>
-        </section>
+<section>
+    <h3>Customers</h3>
+    <p>{{ customer_count }}</p>
+    <a class="manage-link" href="/customers">Manage Customers</a>
+</section>
 
         <section>
             <h3>Total Invoices</h3>
